@@ -63,6 +63,13 @@ void Error_Handler(void);
 #define Led2_GPIO_Port GPIOA
 #define Led3_Pin GPIO_PIN_7
 #define Led3_GPIO_Port GPIOA
+#define Led5_Pin GPIO_PIN_13
+#define Led5_GPIO_Port GPIOB
+#define Led4_Pin GPIO_PIN_11
+#define Led4_GPIO_Port GPIOA
+#define Boton_Pin GPIO_PIN_9
+#define Boton_GPIO_Port GPIOB
+#define Boton_EXTI_IRQn EXTI9_5_IRQn
 
 /* USER CODE BEGIN Private defines */
 

@@ -21,7 +21,12 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-
+#include <stdio.h>
+#include <string.h>
+#include <stdlib.h>
+#include "math.h"
+#include "uart.h"
+#include "UARTRX.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -42,6 +47,9 @@
 /* Private variables ---------------------------------------------------------*/
 TIM_HandleTypeDef htim1;
 
+UART_HandleTypeDef huart1;
+DMA_HandleTypeDef hdma_usart1_rx;
+
 /* USER CODE BEGIN PV */
 
 /* USER CODE END PV */
@@ -49,14 +57,30 @@ TIM_HandleTypeDef htim1;
 /* Private function prototypes -----------------------------------------------*/
 void SystemClock_Config(void);
 static void MX_GPIO_Init(void);
+static void MX_DMA_Init(void);
 static void MX_TIM1_Init(void);
+static void MX_USART1_UART_Init(void);
 /* USER CODE BEGIN PFP */
 
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
-
+void procesa_rx(void)
+{
+    if (strstr((char *)UARTRX1.trama_rx, "ON") != NULL || strstr((char *)UARTRX1.trama_rx, "V00=1") != NULL)
+    {
+        HAL_GPIO_WritePin(Led5_GPIO_Port, Led5_Pin, GPIO_PIN_SET); 
+    }
+    else if (strstr((char *)UARTRX1.trama_rx, "OFF") != NULL || strstr((char *)UARTRX1.trama_rx, "V00=0") != NULL)
+    {
+        HAL_GPIO_WritePin(Led5_GPIO_Port, Led5_Pin, GPIO_PIN_RESET);
+    }
+    else if (strstr((char *)UARTRX1.trama_rx, "TOGGLE") != NULL)
+    {
+        HAL_GPIO_TogglePin(Led5_GPIO_Port, Led5_Pin);
+    }
+}
 /* USER CODE END 0 */
 
 /**
@@ -88,18 +112,26 @@ int main(void)
 
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
+  MX_DMA_Init();
   MX_TIM1_Init();
+  MX_USART1_UART_Init();
   /* USER CODE BEGIN 2 */
   HAL_TIM_Base_Start_IT(&htim1);
+  uartRX_it_idle_dma_init(&UARTRX1);
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
   while (1)
   {
-
     HAL_GPIO_TogglePin(Led1_GPIO_Port, Led1_Pin);
-    HAL_Delay(50);
+    HAL_Delay(200);
+    if (UARTRX1.flag_rx==1)
+	  {
+	    //uartx_write_text(&huart1, UARTRX1.trama_rx);
+	    procesa_rx(); //procedimeinto donde se procesan los datos
+		  uartRX_DMA_Re_init(&UARTRX1);
+	  }
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
@@ -169,7 +201,7 @@ static void MX_TIM1_Init(void)
   htim1.Instance = TIM1;
   htim1.Init.Prescaler = 1600-1;
   htim1.Init.CounterMode = TIM_COUNTERMODE_UP;
-  htim1.Init.Period = 100;
+  htim1.Init.Period = 99;
   htim1.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
   htim1.Init.RepetitionCounter = 0;
   htim1.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_ENABLE;
@@ -195,6 +227,55 @@ static void MX_TIM1_Init(void)
 }
 
 /**
+  * @brief USART1 Initialization Function
+  * @param None
+  * @retval None
+  */
+static void MX_USART1_UART_Init(void)
+{
+
+  /* USER CODE BEGIN USART1_Init 0 */
+
+  /* USER CODE END USART1_Init 0 */
+
+  /* USER CODE BEGIN USART1_Init 1 */
+
+  /* USER CODE END USART1_Init 1 */
+  huart1.Instance = USART1;
+  huart1.Init.BaudRate = 9600;
+  huart1.Init.WordLength = UART_WORDLENGTH_8B;
+  huart1.Init.StopBits = UART_STOPBITS_1;
+  huart1.Init.Parity = UART_PARITY_NONE;
+  huart1.Init.Mode = UART_MODE_TX_RX;
+  huart1.Init.HwFlowCtl = UART_HWCONTROL_NONE;
+  huart1.Init.OverSampling = UART_OVERSAMPLING_16;
+  if (HAL_UART_Init(&huart1) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /* USER CODE BEGIN USART1_Init 2 */
+
+  /* USER CODE END USART1_Init 2 */
+
+}
+
+/**
+  * Enable DMA controller clock
+  */
+static void MX_DMA_Init(void)
+{
+
+  /* DMA controller clock enable */
+  __HAL_RCC_DMA2_CLK_ENABLE();
+
+  /* DMA interrupt init */
+  /* DMA2_Stream2_IRQn interrupt configuration */
+  HAL_NVIC_SetPriority(DMA2_Stream2_IRQn, 0, 0);
+  HAL_NVIC_EnableIRQ(DMA2_Stream2_IRQn);
+
+}
+
+/**
   * @brief GPIO Initialization Function
   * @param None
   * @retval None
@@ -208,16 +289,37 @@ static void MX_GPIO_Init(void)
 
   /* GPIO Ports Clock Enable */
   __HAL_RCC_GPIOA_CLK_ENABLE();
+  __HAL_RCC_GPIOB_CLK_ENABLE();
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(GPIOA, Led1_Pin|Led2_Pin|Led3_Pin, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(GPIOA, Led1_Pin|Led2_Pin|Led3_Pin|Led4_Pin, GPIO_PIN_RESET);
 
-  /*Configure GPIO pins : Led1_Pin Led2_Pin Led3_Pin */
-  GPIO_InitStruct.Pin = Led1_Pin|Led2_Pin|Led3_Pin;
+  /*Configure GPIO pin Output Level */
+  HAL_GPIO_WritePin(Led5_GPIO_Port, Led5_Pin, GPIO_PIN_RESET);
+
+  /*Configure GPIO pins : Led1_Pin Led2_Pin Led3_Pin Led4_Pin */
+  GPIO_InitStruct.Pin = Led1_Pin|Led2_Pin|Led3_Pin|Led4_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
+
+  /*Configure GPIO pin : Led5_Pin */
+  GPIO_InitStruct.Pin = Led5_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+  HAL_GPIO_Init(Led5_GPIO_Port, &GPIO_InitStruct);
+
+  /*Configure GPIO pin : Boton_Pin */
+  GPIO_InitStruct.Pin = Boton_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING;
+  GPIO_InitStruct.Pull = GPIO_PULLDOWN;
+  HAL_GPIO_Init(Boton_GPIO_Port, &GPIO_InitStruct);
+
+  /* EXTI interrupt init*/
+  HAL_NVIC_SetPriority(EXTI9_5_IRQn, 0, 0);
+  HAL_NVIC_EnableIRQ(EXTI9_5_IRQn);
 
   /* USER CODE BEGIN MX_GPIO_Init_2 */
 
