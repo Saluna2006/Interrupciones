@@ -206,9 +206,9 @@ void SysTick_Handler(void)
 void EXTI9_5_IRQHandler(void)
 {
   /* USER CODE BEGIN EXTI9_5_IRQn 0 */
-  HAL_GPIO_TogglePin(Led4_GPIO_Port, Led4_Pin);
+  HAL_GPIO_TogglePin(LED4_GPIO_Port, LED4_Pin);
   /* USER CODE END EXTI9_5_IRQn 0 */
-  HAL_GPIO_EXTI_IRQHandler(Boton_Pin);
+  HAL_GPIO_EXTI_IRQHandler(boton_Pin);
   /* USER CODE BEGIN EXTI9_5_IRQn 1 */
 
   /* USER CODE END EXTI9_5_IRQn 1 */
@@ -220,14 +220,14 @@ void EXTI9_5_IRQHandler(void)
 void TIM1_UP_TIM10_IRQHandler(void)
 {
   /* USER CODE BEGIN TIM1_UP_TIM10_IRQn 0 */
-  HAL_GPIO_TogglePin(Led2_GPIO_Port, Led2_Pin);
+  HAL_GPIO_TogglePin(LED2_GPIO_Port, LED2_Pin);
   /* USER CODE END TIM1_UP_TIM10_IRQn 0 */
   HAL_TIM_IRQHandler(&htim1);
   /* USER CODE BEGIN TIM1_UP_TIM10_IRQn 1 */
   contador++;
   if(contador == 20)
   {
-    HAL_GPIO_TogglePin(Led3_GPIO_Port, Led3_Pin);
+    HAL_GPIO_TogglePin(LED3_GPIO_Port, LED3_Pin);
     contador = 0;
   }
   /* USER CODE END TIM1_UP_TIM10_IRQn 1 */

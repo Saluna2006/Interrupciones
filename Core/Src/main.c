@@ -68,17 +68,13 @@ static void MX_USART1_UART_Init(void);
 /* USER CODE BEGIN 0 */
 void procesa_rx(void)
 {
-    if (strstr((char *)UARTRX1.trama_rx, "ON") != NULL || strstr((char *)UARTRX1.trama_rx, "V00=1") != NULL)
+    if (strstr((char *)UARTRX1.trama_rx, "prender") != NULL)
     {
-        HAL_GPIO_WritePin(Led5_GPIO_Port, Led5_Pin, GPIO_PIN_SET); 
+        HAL_GPIO_WritePin(LED5_GPIO_Port, LED5_Pin, GPIO_PIN_SET); 
     }
-    else if (strstr((char *)UARTRX1.trama_rx, "OFF") != NULL || strstr((char *)UARTRX1.trama_rx, "V00=0") != NULL)
+    else if (strstr((char *)UARTRX1.trama_rx, "apagar") != NULL )
     {
-        HAL_GPIO_WritePin(Led5_GPIO_Port, Led5_Pin, GPIO_PIN_RESET);
-    }
-    else if (strstr((char *)UARTRX1.trama_rx, "TOGGLE") != NULL)
-    {
-        HAL_GPIO_TogglePin(Led5_GPIO_Port, Led5_Pin);
+        HAL_GPIO_WritePin(LED5_GPIO_Port, LED5_Pin, GPIO_PIN_RESET);
     }
 }
 /* USER CODE END 0 */
@@ -124,11 +120,10 @@ int main(void)
   /* USER CODE BEGIN WHILE */
   while (1)
   {
-    HAL_GPIO_TogglePin(Led1_GPIO_Port, Led1_Pin);
-    HAL_Delay(200);
+    HAL_GPIO_TogglePin(LED1_GPIO_Port, LED1_Pin);
+    HAL_Delay(300);
     if (UARTRX1.flag_rx==1)
 	  {
-	    //uartx_write_text(&huart1, UARTRX1.trama_rx);
 	    procesa_rx(); //procedimeinto donde se procesan los datos
 		  uartRX_DMA_Re_init(&UARTRX1);
 	  }
@@ -292,30 +287,23 @@ static void MX_GPIO_Init(void)
   __HAL_RCC_GPIOB_CLK_ENABLE();
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(GPIOA, Led1_Pin|Led2_Pin|Led3_Pin|Led4_Pin, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(GPIOA, LED1_Pin|LED2_Pin|LED3_Pin|LED4_Pin
+                          |LED5_Pin, GPIO_PIN_RESET);
 
-  /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(Led5_GPIO_Port, Led5_Pin, GPIO_PIN_RESET);
-
-  /*Configure GPIO pins : Led1_Pin Led2_Pin Led3_Pin Led4_Pin */
-  GPIO_InitStruct.Pin = Led1_Pin|Led2_Pin|Led3_Pin|Led4_Pin;
+  /*Configure GPIO pins : LED1_Pin LED2_Pin LED3_Pin LED4_Pin
+                           LED5_Pin */
+  GPIO_InitStruct.Pin = LED1_Pin|LED2_Pin|LED3_Pin|LED4_Pin
+                          |LED5_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
 
-  /*Configure GPIO pin : Led5_Pin */
-  GPIO_InitStruct.Pin = Led5_Pin;
-  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
-  GPIO_InitStruct.Pull = GPIO_NOPULL;
-  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
-  HAL_GPIO_Init(Led5_GPIO_Port, &GPIO_InitStruct);
-
-  /*Configure GPIO pin : Boton_Pin */
-  GPIO_InitStruct.Pin = Boton_Pin;
+  /*Configure GPIO pin : boton_Pin */
+  GPIO_InitStruct.Pin = boton_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING;
   GPIO_InitStruct.Pull = GPIO_PULLDOWN;
-  HAL_GPIO_Init(Boton_GPIO_Port, &GPIO_InitStruct);
+  HAL_GPIO_Init(boton_GPIO_Port, &GPIO_InitStruct);
 
   /* EXTI interrupt init*/
   HAL_NVIC_SetPriority(EXTI9_5_IRQn, 0, 0);
